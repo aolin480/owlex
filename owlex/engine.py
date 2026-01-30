@@ -12,7 +12,7 @@ from typing import Any
 
 from .config import config
 from .models import Task, TaskStatus, AgentResponse, Agent
-from .agents import CodexRunner, GeminiRunner, OpenCodeRunner, ClaudeORRunner
+from .agents import CodexRunner, ClaudeRunner, GeminiRunner, OpenCodeRunner, ClaudeORRunner
 from .agents.base import AgentRunner, AgentCommand
 
 
@@ -36,6 +36,7 @@ def build_agent_response(
 
     prefix_map = {
         Agent.CODEX.value: "Codex Output:\n\n",
+        Agent.CLAUDE.value: "Claude Output:\n\n",
         Agent.GEMINI.value: "Gemini Output:\n\n",
         Agent.OPENCODE.value: "OpenCode Output:\n\n",
         Agent.CLAUDEOR.value: "Claude (OpenRouter) Output:\n\n",
@@ -61,6 +62,7 @@ NotifyCallback = Callable[[str, str], Any] | None
 
 # Agent runner instances - available for import by other modules
 codex_runner = CodexRunner()
+claude_runner = ClaudeRunner()
 gemini_runner = GeminiRunner()
 opencode_runner = OpenCodeRunner()
 claudeor_runner = ClaudeORRunner()
@@ -68,6 +70,7 @@ claudeor_runner = ClaudeORRunner()
 # Map Agent enum to runner instances
 AGENT_RUNNERS: dict[Agent, AgentRunner] = {
     Agent.CODEX: codex_runner,
+    Agent.CLAUDE: claude_runner,
     Agent.GEMINI: gemini_runner,
     Agent.OPENCODE: opencode_runner,
     Agent.CLAUDEOR: claudeor_runner,

@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Any
 
 from .config import config
-from .engine import engine, build_agent_response, codex_runner, gemini_runner, opencode_runner, claudeor_runner
+from .engine import engine, build_agent_response, codex_runner, claude_runner, gemini_runner, opencode_runner, claudeor_runner
 from .prompts import inject_role_prefix, build_deliberation_prompt_with_role
 from .roles import RoleSpec, RoleDefinition, RoleResolver, RoleId, get_resolver
 from .models import (
@@ -140,8 +140,9 @@ class Council:
 
         # Determine which agents to run
         excluded = config.council.exclude_agents
+        # Always include claude CLI, codex, gemini, opencode
         # Include claudeor only if API key is configured
-        all_agents = ["codex", "gemini", "opencode"]
+        all_agents = ["codex", "claude", "gemini", "opencode"]
         if config.claudeor.api_key:
             all_agents.append("claudeor")
         active_agents = [a for a in all_agents if a not in excluded]

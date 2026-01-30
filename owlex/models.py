@@ -33,9 +33,10 @@ class ErrorCode(str, Enum):
 class Agent(str, Enum):
     """Available AI agents."""
     CODEX = "codex"
+    CLAUDE = "claude"  # Claude CLI
     GEMINI = "gemini"
     OPENCODE = "opencode"
-    CLAUDEOR = "claudeor"  # Claude Code via OpenRouter
+    CLAUDEOR = "claudeor"  # Claude via OpenRouter API
 
 
 @dataclass
@@ -104,9 +105,10 @@ ClaudeOpinion = PrimaryAgentOpinion
 class CouncilRound(BaseModel):
     """A single round of council deliberation."""
     codex: AgentResponse | None = None
+    claude: AgentResponse | None = None  # Claude CLI
     gemini: AgentResponse | None = None
     opencode: AgentResponse | None = None
-    claudeor: AgentResponse | None = None  # Claude Code via OpenRouter
+    claudeor: AgentResponse | None = None  # Claude via OpenRouter API
 
 
 class CouncilMetadata(BaseModel):
