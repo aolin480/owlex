@@ -929,7 +929,7 @@ async def council_ask(
         "team": effective_team,
         "roles": role_assignments,
         "role_names": role_names,
-        "include_claude_opinion": config.council.include_claude_opinion,
+        "include_primary_agent_opinion": config.council.include_primary_agent_opinion,
     }
 
     return response

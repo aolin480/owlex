@@ -102,8 +102,8 @@ class ClaudeRunner(AgentRunner):
         """Build command for starting a new Claude session."""
         full_command = ["claude", "--print"]  # Non-interactive mode
         
-        # Add permission mode (auto-approve for non-interactive)
-        full_command.extend(["--permission-mode", "auto"])
+        # Add permission mode (dontAsk for non-interactive auto-approval)
+        full_command.extend(["--permission-mode", "dontAsk"])
         
         if working_directory:
             # Claude doesn't have a --cd flag, we set cwd instead
@@ -132,8 +132,8 @@ class ClaudeRunner(AgentRunner):
         """Build command for resuming an existing Claude session."""
         full_command = ["claude", "--print"]  # Non-interactive mode
         
-        # Add permission mode
-        full_command.extend(["--permission-mode", "auto"])
+        # Add permission mode (dontAsk for non-interactive auto-approval)
+        full_command.extend(["--permission-mode", "dontAsk"])
         
         # Resume session
         if session_ref == "--continue":

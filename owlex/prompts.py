@@ -39,6 +39,7 @@ DELIBERATION_INSTRUCTION_CRITIQUE = (
 def build_deliberation_prompt(
     original_prompt: str,
     codex_answer: str | None = None,
+    claude_cli_answer: str | None = None,
     gemini_answer: str | None = None,
     opencode_answer: str | None = None,
     claudeor_answer: str | None = None,
@@ -58,10 +59,11 @@ def build_deliberation_prompt(
     Args:
         original_prompt: The original question asked
         codex_answer: Codex's round 1 answer (optional if excluded)
+        claude_cli_answer: Claude CLI's round 1 answer (optional if excluded)
         gemini_answer: Gemini's round 1 answer (optional if excluded)
         opencode_answer: OpenCode's round 1 answer (optional if excluded)
         claudeor_answer: ClaudeOR's round 1 answer (optional if excluded)
-        claude_answer: Optional Claude opinion to include
+        claude_answer: Optional primary agent opinion to include
         critique: If True, use critique mode prompts
         include_original: If True, include original_prompt in the output (for exec fallback)
 
@@ -82,10 +84,13 @@ def build_deliberation_prompt(
         parts.extend(["", "ORIGINAL QUESTION:", original_prompt])
 
     if claude_answer:
-        parts.extend(["", "CLAUDE'S ANSWER:", claude_answer])
+        parts.extend(["", "PRIMARY AGENT'S OPINION:", claude_answer])
 
     if codex_answer:
         parts.extend(["", "CODEX'S ANSWER:", codex_answer])
+
+    if claude_cli_answer:
+        parts.extend(["", "CLAUDE CLI'S ANSWER:", claude_cli_answer])
 
     if gemini_answer:
         parts.extend(["", "GEMINI'S ANSWER:", gemini_answer])
@@ -123,6 +128,7 @@ def build_deliberation_prompt_with_role(
     original_prompt: str,
     role: RoleDefinition | None = None,
     codex_answer: str | None = None,
+    claude_cli_answer: str | None = None,
     gemini_answer: str | None = None,
     opencode_answer: str | None = None,
     claudeor_answer: str | None = None,
@@ -140,10 +146,11 @@ def build_deliberation_prompt_with_role(
         original_prompt: The original question
         role: The role definition for this agent (maintains perspective in R2)
         codex_answer: Codex's round 1 answer
+        claude_cli_answer: Claude CLI's round 1 answer
         gemini_answer: Gemini's round 1 answer
         opencode_answer: OpenCode's round 1 answer
         claudeor_answer: ClaudeOR's round 1 answer
-        claude_answer: Optional Claude opinion
+        claude_answer: Optional primary agent opinion
         critique: If True, use critique mode prompts
         include_original: If True, include original_prompt (for exec fallback)
 
@@ -154,6 +161,7 @@ def build_deliberation_prompt_with_role(
     base_prompt = build_deliberation_prompt(
         original_prompt=original_prompt,
         codex_answer=codex_answer,
+        claude_cli_answer=claude_cli_answer,
         gemini_answer=gemini_answer,
         opencode_answer=opencode_answer,
         claudeor_answer=claudeor_answer,

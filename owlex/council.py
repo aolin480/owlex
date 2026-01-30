@@ -272,6 +272,34 @@ class Council:
             codex_task.async_task = asyncio.create_task(run_codex())
             async_tasks.append(codex_task.async_task)
 
+        if "claude" not in excluded:
+            claude_role = roles.get("claude")
+            claude_prompt = inject_role_prefix(prompt, claude_role)
+
+            claude_task = self._engine.create_task(
+                command=f"council_{Agent.CLAUDE.value}",
+                args={"prompt": claude_prompt, "working_directory": working_directory},
+                context=self.context,
+            )
+            tasks["claude"] = claude_task
+
+            # Capture prompt in closure
+            _claude_prompt = claude_prompt
+
+            async def run_claude():
+                # Clean start for R1 - session ID captured after completion
+                await self._engine.run_agent(
+                    claude_task, claude_runner, mode="exec",
+                    prompt=_claude_prompt, working_directory=working_directory
+                )
+                elapsed = (datetime.now() - round1_start).total_seconds()
+                status = "completed" if claude_task.status == "completed" else "failed"
+                self.log(f"Claude {status} ({elapsed:.1f}s)")
+                await self.notify(f"Claude {status} ({elapsed:.1f}s)")
+
+            claude_task.async_task = asyncio.create_task(run_claude())
+            async_tasks.append(claude_task.async_task)
+
         if "gemini" not in excluded:
             gemini_role = roles.get("gemini")
             gemini_prompt = inject_role_prefix(prompt, gemini_role)
@@ -397,6 +425,19 @@ class Council:
                 self.log("Codex session ID not found, R2 will use exec mode")
             return session
 
+        async def parse_claude_session():
+            if "claude" not in tasks or tasks["claude"].status != "completed":
+                return None
+            session = await claude_runner.parse_session_id(
+                "", since_mtime=r1_start_mtime, working_directory=working_directory
+            )
+            if session and not claude_runner.validate_session_id(session):
+                self.log(f"Claude session ID validation failed: {session}")
+                return None
+            if not session:
+                self.log("Claude session ID not found, R2 will use exec mode")
+            return session
+
         async def parse_gemini_session():
             if "gemini" not in tasks or tasks["gemini"].status != "completed":
                 return None
@@ -436,8 +477,9 @@ class Council:
                 self.log("ClaudeOR session ID not found, R2 will use exec mode")
             return session
 
-        codex_session, gemini_session, opencode_session, claudeor_session = await asyncio.gather(
+        codex_session, claude_session, gemini_session, opencode_session, claudeor_session = await asyncio.gather(
             parse_codex_session(),
+            parse_claude_session(),
             parse_gemini_session(),
             parse_opencode_session(),
             parse_claudeor_session(),
@@ -445,6 +487,7 @@ class Council:
 
         return CouncilRound(
             codex=build_agent_response(tasks["codex"], Agent.CODEX, session_id=codex_session) if "codex" in tasks else None,
+            claude=build_agent_response(tasks["claude"], Agent.CLAUDE, session_id=claude_session) if "claude" in tasks else None,
             gemini=build_agent_response(tasks["gemini"], Agent.GEMINI, session_id=gemini_session) if "gemini" in tasks else None,
             opencode=build_agent_response(tasks["opencode"], Agent.OPENCODE, session_id=opencode_session) if "opencode" in tasks else None,
             claudeor=build_agent_response(tasks["claudeor"], Agent.CLAUDEOR, session_id=claudeor_session) if "claudeor" in tasks else None,
@@ -473,6 +516,7 @@ class Council:
         r1_failed = set()
         for agent_name, r1_result in [
             ("codex", round_1.codex),
+            ("claude", round_1.claude),
             ("gemini", round_1.gemini),
             ("opencode", round_1.opencode),
             ("claudeor", round_1.claudeor),
@@ -484,11 +528,13 @@ class Council:
         # Get explicit session IDs from R1 (Option A)
         # If session_id is None, we fall back to exec mode
         codex_session = round_1.codex.session_id if round_1.codex else None
+        claude_session = round_1.claude.session_id if round_1.claude else None
         gemini_session = round_1.gemini.session_id if round_1.gemini else None
         opencode_session = round_1.opencode.session_id if round_1.opencode else None
         claudeor_session = round_1.claudeor.session_id if round_1.claudeor else None
 
         codex_content = (round_1.codex.content or round_1.codex.error or "(no response)") if round_1.codex else None
+        claude_r1_content = (round_1.claude.content or round_1.claude.error or "(no response)") if round_1.claude else None
         gemini_content = (round_1.gemini.content or round_1.gemini.error or "(no response)") if round_1.gemini else None
         opencode_content = (round_1.opencode.content or round_1.opencode.error or "(no response)") if round_1.opencode else None
         claudeor_content = (round_1.claudeor.content or round_1.claudeor.error or "(no response)") if round_1.claudeor else None
@@ -513,6 +559,7 @@ class Council:
                 original_prompt=prompt,
                 role=codex_role,
                 codex_answer=codex_content,
+                claude_cli_answer=claude_r1_content,
                 gemini_answer=gemini_content,
                 opencode_answer=opencode_content,
                 claudeor_answer=claudeor_content,
@@ -525,6 +572,7 @@ class Council:
                 original_prompt=prompt,
                 role=codex_role,
                 codex_answer=codex_content,
+                claude_cli_answer=claude_r1_content,
                 gemini_answer=gemini_content,
                 opencode_answer=opencode_content,
                 claudeor_answer=claudeor_content,
@@ -574,6 +622,7 @@ class Council:
                 original_prompt=prompt,
                 role=gemini_role,
                 codex_answer=codex_content,
+                claude_cli_answer=claude_r1_content,
                 gemini_answer=gemini_content,
                 opencode_answer=opencode_content,
                 claudeor_answer=claudeor_content,
@@ -586,6 +635,7 @@ class Council:
                 original_prompt=prompt,
                 role=gemini_role,
                 codex_answer=codex_content,
+                claude_cli_answer=claude_r1_content,
                 gemini_answer=gemini_content,
                 opencode_answer=opencode_content,
                 claudeor_answer=claudeor_content,
@@ -633,6 +683,7 @@ class Council:
                 original_prompt=prompt,
                 role=opencode_role,
                 codex_answer=codex_content,
+                claude_cli_answer=claude_r1_content,
                 gemini_answer=gemini_content,
                 opencode_answer=opencode_content,
                 claudeor_answer=claudeor_content,
@@ -645,6 +696,7 @@ class Council:
                 original_prompt=prompt,
                 role=opencode_role,
                 codex_answer=codex_content,
+                claude_cli_answer=claude_r1_content,
                 gemini_answer=gemini_content,
                 opencode_answer=opencode_content,
                 claudeor_answer=claudeor_content,
@@ -692,6 +744,7 @@ class Council:
                 original_prompt=prompt,
                 role=claudeor_role,
                 codex_answer=codex_content,
+                claude_cli_answer=claude_r1_content,
                 gemini_answer=gemini_content,
                 opencode_answer=opencode_content,
                 claudeor_answer=claudeor_content,
@@ -704,6 +757,7 @@ class Council:
                 original_prompt=prompt,
                 role=claudeor_role,
                 codex_answer=codex_content,
+                claude_cli_answer=claude_r1_content,
                 gemini_answer=gemini_content,
                 opencode_answer=opencode_content,
                 claudeor_answer=claudeor_content,
