@@ -12,7 +12,8 @@ from .models import (
     Agent,
     TaskResponse,
     AgentResponse,
-    ClaudeOpinion,
+    PrimaryAgentOpinion,
+    ClaudeOpinion,  # Legacy alias for backwards compatibility
     CouncilResponse,
     CouncilRound,
     CouncilMetadata,
@@ -36,7 +37,8 @@ __all__ = [
     "Agent",
     "TaskResponse",
     "AgentResponse",
-    "ClaudeOpinion",
+    "PrimaryAgentOpinion",
+    "ClaudeOpinion",  # Legacy alias
     "CouncilResponse",
     "CouncilRound",
     "CouncilMetadata",

@@ -15,7 +15,7 @@ from .prompts import inject_role_prefix, build_deliberation_prompt_with_role
 from .roles import RoleSpec, RoleDefinition, RoleResolver, RoleId, get_resolver
 from .models import (
     Agent,
-    ClaudeOpinion,
+    PrimaryAgentOpinion,
     CouncilResponse,
     CouncilRound,
     CouncilMetadata,
@@ -161,7 +161,7 @@ class Council:
 
         # === Round 1: Parallel initial queries ===
         if claude_opinion and claude_opinion.strip():
-            self.log(f"Claude's opinion received ({len(claude_opinion)} chars)")
+            self.log(f"Primary agent's opinion received ({len(claude_opinion)} chars)")
 
         self.log(f"Round 1: querying {', '.join(a.title() for a in active_agents)}...")
         await self.notify(f"Council Round 1: querying {', '.join(a.title() for a in active_agents)}", progress=20)
@@ -182,10 +182,10 @@ class Council:
                 roles=resolved_roles,
             )
 
-        # Build Claude opinion object if provided
-        claude_opinion_obj = None
+        # Build primary agent opinion object if provided
+        primary_agent_opinion_obj = None
         if claude_opinion and claude_opinion.strip():
-            claude_opinion_obj = ClaudeOpinion(
+            primary_agent_opinion_obj = PrimaryAgentOpinion(
                 content=claude_opinion.strip(),
                 provided_at=council_start.isoformat(),
             )
@@ -198,7 +198,7 @@ class Council:
             working_directory=working_directory,
             deliberation=deliberate,
             critique=critique,
-            claude_opinion=claude_opinion_obj,
+            primary_agent_opinion=primary_agent_opinion_obj,
             round_1=round_1,
             round_2=round_2,
             roles=self._build_role_assignments(resolved_roles),

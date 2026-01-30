@@ -91,10 +91,14 @@ class AgentResponse(BaseModel):
     session_id: str | None = None  # Explicit session ID for resume (Option A)
 
 
-class ClaudeOpinion(BaseModel):
-    """Claude's initial opinion provided before council deliberation."""
+class PrimaryAgentOpinion(BaseModel):
+    """Primary agent's initial opinion provided before council deliberation."""
     content: str
     provided_at: str  # ISO timestamp
+
+
+# Legacy alias for backwards compatibility
+ClaudeOpinion = PrimaryAgentOpinion
 
 
 class CouncilRound(BaseModel):
@@ -118,7 +122,7 @@ class CouncilResponse(BaseModel):
     working_directory: str | None = None
     deliberation: bool
     critique: bool = False  # If true, round 2 used critique mode instead of revision
-    claude_opinion: ClaudeOpinion | None = None
+    primary_agent_opinion: PrimaryAgentOpinion | None = None
     round_1: CouncilRound
     round_2: CouncilRound | None = None
     # Role assignments (None if all agents used neutral/no roles)

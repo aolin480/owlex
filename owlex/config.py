@@ -45,7 +45,7 @@ class CouncilConfig:
     """Configuration for council orchestration."""
     exclude_agents: frozenset[str] = frozenset()  # Agents to exclude from council
     default_team: str | None = None  # Default team preset when no roles/team specified
-    include_claude_opinion: bool = False  # Whether Claude should share its opinion by default
+    include_primary_agent_opinion: bool = False  # Whether primary agent should share its opinion by default
 
 
 @dataclass(frozen=True)
@@ -106,12 +106,15 @@ def load_config() -> OwlexConfig:
     )
     # Parse default team (None if not set or empty)
     default_team = os.environ.get("COUNCIL_DEFAULT_TEAM", "").strip() or None
-    # Parse Claude opinion setting
-    include_claude_opinion = os.environ.get("COUNCIL_CLAUDE_OPINION", "false").lower() == "true"
+    # Parse primary agent opinion setting (supports legacy COUNCIL_CLAUDE_OPINION for backwards compatibility)
+    include_primary_agent_opinion = (
+        os.environ.get("COUNCIL_PRIMARY_AGENT_OPINION", 
+                      os.environ.get("COUNCIL_CLAUDE_OPINION", "false")).lower() == "true"
+    )
     council = CouncilConfig(
         exclude_agents=exclude_agents,
         default_team=default_team,
-        include_claude_opinion=include_claude_opinion,
+        include_primary_agent_opinion=include_primary_agent_opinion,
     )
 
     try:

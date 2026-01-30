@@ -761,7 +761,7 @@ async def _run_council_deliberation(
     task,
     prompt: str,
     working_directory: str | None,
-    claude_opinion: str | None,
+    primary_agent_opinion: str | None,
     deliberate: bool,
     critique: bool,
     timeout: int,
@@ -776,7 +776,7 @@ async def _run_council_deliberation(
         response = await council.deliberate(
             prompt=prompt,
             working_directory=working_directory,
-            claude_opinion=claude_opinion,
+            claude_opinion=primary_agent_opinion,
             deliberate=deliberate,
             critique=critique,
             timeout=timeout,
@@ -801,7 +801,7 @@ async def _run_council_deliberation(
 async def council_ask(
     ctx: Context[ServerSession, None],
     prompt: str = Field(description="The question or task to send to the council"),
-    claude_opinion: str | None = Field(default=None, description="Claude's initial opinion to share with the council"),
+    primary_agent_opinion: str | None = Field(default=None, description="Primary agent's initial opinion to share with the council (e.g., Codex, Claude, etc.)"),
     working_directory: str | None = Field(default=None, description="Working directory for context"),
     deliberate: bool = Field(default=True, description="If true, share answers between agents for a second round of deliberation"),
     critique: bool = Field(default=False, description="If true, round 2 asks agents to critique/find flaws instead of revise"),
@@ -841,10 +841,10 @@ async def council_ask(
     - roles=["security", "perf", "skeptic"] - auto-assign to codex, gemini, opencode
     - team="security_audit" - use the security audit team preset
 
-    If claude_opinion is provided, it will be shared with other council members
-    during deliberation so they can consider Claude's perspective.
+    If primary_agent_opinion is provided, it will be shared with other council members
+    during deliberation so they can consider the primary agent's perspective.
 
-    If deliberate=True, shares all answers (including Claude's) with each agent
+    If deliberate=True, shares all answers (including the primary agent's) with each agent
     for a second round, allowing them to revise after seeing others' responses.
 
     If critique=True, round 2 asks agents to find bugs, security issues, and
@@ -892,7 +892,7 @@ async def council_ask(
         args={
             "prompt": prompt.strip(),
             "working_directory": working_directory,
-            "claude_opinion": claude_opinion,
+            "primary_agent_opinion": primary_agent_opinion,
             "deliberate": deliberate,
             "critique": critique,
             "timeout": timeout,
@@ -906,7 +906,7 @@ async def council_ask(
         task,
         prompt=prompt.strip(),
         working_directory=working_directory,
-        claude_opinion=claude_opinion,
+        primary_agent_opinion=primary_agent_opinion,
         deliberate=deliberate,
         critique=critique,
         timeout=timeout,
